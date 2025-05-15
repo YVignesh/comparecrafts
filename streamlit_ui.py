@@ -281,6 +281,9 @@ if uploaded_files and len(uploaded_files) == 2:
             df_main_cmp = df_main_cmp.set_index('__key__')
             df_secondary_cmp = df_secondary_cmp.set_index('__key__')
 
+            df_main_cmp = df_main_cmp.drop_duplicates(subset="__key__", keep="first")
+            df_secondary_cmp = df_secondary_cmp.drop_duplicates(subset="__key__", keep="first")
+
             #diff_report = compare_df(df_main_cmp, df_secondary_cmp).drop_duplicates(subset=["Key"])
             diff_report = compare_df(df_main_cmp, df_secondary_cmp, case_sensitive=case_sensitive_compare)
 
