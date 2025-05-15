@@ -17,7 +17,7 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
             f"Filter {i+1} column ({label_prefix})", 
             options=df.columns.tolist(), 
             #index=df.columns.get_loc(saved[0]) if saved else 0,
-            index=df.columns.get_loc(saved[0]) if saved and saved[0] in df.columns else 0
+            index=df.columns.get_loc(saved[0]) if saved and saved[0] in df.columns else 0,
             key=f"{label_prefix}_col_{i}"
         )
 
