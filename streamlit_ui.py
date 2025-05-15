@@ -359,7 +359,6 @@ if uploaded_files and len(uploaded_files) == 2:
                     mime="application/json")
             else:
                 st.warning("⚠️ Please enter a valid config file name.")
-            )
     else:
         st.warning("Please select and map an equal number of columns from both files.")
 else:
