@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 import json
+import re
+
+safe_filename = re.sub(r'[^\w\-_. ]', '_', config_filename).strip()
 
 def process_key(df, key_columns, case_sensitive):
     key_parts = df[key_columns].astype(str)
@@ -348,12 +351,16 @@ if uploaded_files and len(uploaded_files) == 2:
             "case_sensitive_compare": case_sensitive_compare  # ✅ New toggle added
         }
 
-
-            st.download_button(
-                "💾 Download Comparison Config",
-                data=json.dumps(comparison_config, indent=2),
-                file_name="comparison_config.json",
-                mime="application/json"
+            config_filename = st.text_input("📝 Enter config file name", value="comparison_config.json")
+            if config_filename.strip():
+                st.download_button(
+                    "💾 Download Comparison Config",
+                    data=json.dumps(comparison_config, indent=2),
+                    file_name=config_filename if config_filename.endswith(".json") else f"{config_filename}.json",
+                    mime="application/json"
+                )
+else:
+    st.warning("⚠️ Please enter a valid config file name.")
             )
     else:
         st.warning("Please select and map an equal number of columns from both files.")
