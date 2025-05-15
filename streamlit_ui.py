@@ -21,6 +21,13 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
     for i in range(num_filters):
         saved = saved_filters[i] if saved_filters and i < len(saved_filters) else None
 
+        col_name = saved[0] if saved and len(saved) > 0 else None
+        operator = saved[1] if saved and len(saved) > 1 else "=="
+        value = saved[2] if saved and len(saved) > 2 else ""
+        case_sensitive = saved[3] if saved and len(saved) > 3 else False
+        use_regex = saved[4] if saved and len(saved) > 4 else False
+
+
         col = st.selectbox(
             f"Filter {i+1} column ({label_prefix})", 
             options=df.columns.tolist(), 
@@ -181,11 +188,15 @@ config_file = st.sidebar.file_uploader("Upload Config JSON", type=["json"])
 load_config = st.sidebar.button("Load Config")
 
 if load_config and config_file:
-    st.session_state.config_data = json.load(config_file)
-    st.sidebar.success("✅ Config loaded!")
+    try:
+        st.session_state.config_data = json.load(config_file)
+        st.sidebar.success("✅ Config loaded!")
+    except Exception as e:
+        st.sidebar.error(f"❌ Failed to load config: {e}")
 
 config_data = st.session_state.config_data
 config_loaded = bool(config_data)
+case_sensitive_compare = config_data.get("case_sensitive_compare", True)
 
 #st.sidebar.json(st.session_state.config_data)
 
