@@ -36,8 +36,12 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
             key=f"{label_prefix}_op_{i}"
         )
 
-        val = st.text_input(f"Value for {col}", value=saved[2] if saved else "", key=f"{label_prefix}_val_{i}")
+        if op == "==" or op == "!=":
+            val = st.selectbox(f"Value for {col}", options=sorted(df[col].dropna().astype(str).unique()), index=0 if saved and saved[2] in df[col].astype(str).tolist() else 0, key=f"{label_prefix}_val_{i}")
+        else:
+            val = st.text_input(f"Value for {col}", value=saved[2] if saved else "", key=f"{label_prefix}_val_{i}")
 
+        
         case_sensitive = saved[3] if saved and len(saved) > 3 else False
         use_regex = saved[4] if saved and len(saved) > 4 else False
 
@@ -287,6 +291,17 @@ if uploaded_files and len(uploaded_files) == 2:
             #diff_report = compare_df(df_main_cmp, df_secondary_cmp).drop_duplicates(subset=["Key"])
             diff_report = compare_df(df_main_cmp, df_secondary_cmp, case_sensitive=case_sensitive_compare)
 
+            # New: Generate summary
+            summary_counts = diff_report["ChangeType"].value_counts().to_dict()
+            total = len(diff_report)
+            
+            # Show summary
+            with st.expander("📊 Difference Summary", expanded=True):
+                st.markdown(f"**Total Rows Compared:** {total}")
+                for k in ["Added", "Removed", "Modified", "Unchanged"]:
+                    if k in summary_counts:
+                        st.markdown(f"- **{k}:** {summary_counts[k]}")
+            
             # Display report
             st.subheader("📋 Difference Report")
             st.dataframe(diff_report)
