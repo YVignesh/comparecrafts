@@ -325,17 +325,18 @@ if uploaded_files and len(uploaded_files) == 2:
 
             # Save config
             comparison_config = {
-                "main_excel": f_main.name,
-                "main_sheet": sheet_main,
-                "secondary_sheet": sheet_secondary,
-                "main_filters": filters_main,
-                "secondary_filters": filters_secondary,
-                "selected_columns_main": columns_main,
-                "selected_columns_secondary": columns_secondary,
-                "column_mapping": column_mapping,
-                "key_columns": key_columns,
-                "case_sensitive_compare": case_sensitive_compare
-            }
+            "main_excel": f_main.name,
+            "main_sheet": sheet_main,
+            "secondary_sheet": sheet_secondary,
+            "main_filters": filters_main,
+            "secondary_filters": filters_secondary,
+            "selected_columns_main": columns_main,
+            "selected_columns_secondary": columns_secondary,
+            "column_mapping": column_mapping,
+            "key_columns": key_columns,
+            "case_sensitive_compare": case_sensitive_compare  # ✅ New toggle added
+        }
+
 
             st.download_button(
                 "💾 Download Comparison Config",
