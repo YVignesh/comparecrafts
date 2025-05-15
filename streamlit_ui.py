@@ -163,7 +163,7 @@ if load_config and config_file:
 config_data = st.session_state.config_data
 config_loaded = bool(config_data)
 
-st.sidebar.json(st.session_state.config_data)
+#st.sidebar.json(st.session_state.config_data)
 
 # --- File Upload ---
 uploaded_files = st.file_uploader("Upload two files (Excel/CSV/TXT)", type=["xlsx","csv","txt"], accept_multiple_files=True)
