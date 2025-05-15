@@ -253,6 +253,8 @@ if uploaded_files and len(uploaded_files) == 2:
         st.subheader("🔑 Select Key Columns (from Main File columns)")
         key_columns = st.multiselect("Select one or more columns to form synthetic key", options=columns_main, default=config_data.get("key_columns") if config_loaded else [])
 
+        case_sensitive_compare = st.checkbox("🔠 Case-sensitive comparison?", value=True)
+        
         if key_columns:
             df_main_cmp = df_main[columns_main].copy()
             df_secondary_cmp = df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy()
