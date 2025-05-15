@@ -279,4 +279,4 @@ if uploaded_files and len(uploaded_files) == 2:
     else:
         st.warning("Please select and map an equal number of columns from both files.")
 else:
-    st.info("Please upload exactly two Excel files.")
+    st.info("Please upload exactly two files.")
