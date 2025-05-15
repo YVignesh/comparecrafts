@@ -12,7 +12,7 @@ def process_key(df, key_columns, case_sensitive):
     return key_parts.agg('|'.join, axis=1)
 
 def build_filter_ui(df, label_prefix, saved_filters=None):
-    st.markdown(f"### 🔍 {label_prefix} Filter Builder")
+    st.markdown(f"### 🔍 {label_prefix} Filter Builder (supports ==, contains, not contains, etc.)")
 
     filters = []
     num_default = len(saved_filters) if saved_filters else 0
@@ -31,8 +31,8 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
 
         op = st.selectbox(
             f"Condition for {col}",
-            options=["==", "!=", ">", ">=", "<", "<=", "contains"],
-            index=(["==", "!=", ">", ">=", "<", "<=", "contains"].index(saved[1]) if saved else 0),
+            options=["==", "!=", ">", ">=", "<", "<=", "contains", "not contains"],
+            index=(["==", "!=", ">", ">=", "<", "<=", "contains",, "not contains"].index(saved[1]) if saved else 0),
             key=f"{label_prefix}_op_{i}"
         )
 
@@ -45,13 +45,14 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
         case_sensitive = saved[3] if saved and len(saved) > 3 else False
         use_regex = saved[4] if saved and len(saved) > 4 else False
 
-        if op != "contains":
+        if op not in ["contains", "not contains"]:
             case_sensitive = False
             use_regex = False
 
-        if op == "contains":
+        if op in ["contains", "not contains"]:
             case_sensitive = st.checkbox("Case Sensitive?", value=case_sensitive, key=f"{label_prefix}_case_{i}")
             use_regex = st.checkbox("Use Regex?", value=use_regex, key=f"{label_prefix}_regex_{i}")
+
 
         filters.append((col, op, val, case_sensitive, use_regex))
 
@@ -83,6 +84,9 @@ def apply_filters(df, filters):
                 df = df[df[col] <= val_casted]
             elif op == "contains":
                 df = df[df[col].astype(str).str.contains(str(val_casted), na=False, case=case, regex=regex)]
+            elif op == "not contains":
+                df = df[~df[col].astype(str).str.contains(str(val_casted), na=False, case=case, regex=regex)]
+
         except Exception as e:
             st.error(f"❌ Error applying filter on column '{col}': {e}")
             st.stop()
