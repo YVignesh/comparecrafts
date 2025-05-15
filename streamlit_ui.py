@@ -356,8 +356,7 @@ if uploaded_files and len(uploaded_files) == 2:
                     "💾 Download Comparison Config",
                     data=json.dumps(comparison_config, indent=2),
                     file_name=safe_filename if safe_filename.endswith(".json") else f"{safe_filename}.json",
-                    mime="application/json"
-                )
+                    mime="application/json")
 else:
     st.warning("⚠️ Please enter a valid config file name.")
             )
