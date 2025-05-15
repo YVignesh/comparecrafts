@@ -96,7 +96,7 @@ def load_data(file, sheet=None,delimiter=None):
         st.error(f"❌ Failed to load {file.name}: {e}")
         return None
 
-def compare_df(df1, df2):
+def compare_df(df1, df2, case_sensitive=True):
     keys = df1.index.union(df2.index)
     columns = df1.columns.union(df2.columns)
     result = []
@@ -129,7 +129,15 @@ def compare_df(df1, df2):
             if pd.isna(val_old) and pd.isna(val_new):
                 continue
             elif pd.isna(val_old) != pd.isna(val_new) or str(val_old) != str(val_new):
-                changed = True
+                val_old_str = str(val_old) if not pd.isna(val_old) else ""
+                val_new_str = str(val_new) if not pd.isna(val_new) else ""
+                
+                if not case_sensitive:
+                    val_old_str = val_old_str.lower()
+                    val_new_str = val_new_str.lower()
+                
+                if val_old_str != val_new_str:
+                    changed = True
 
         if key not in df2.index:
             diff_row["ChangeType"] = "Added"
@@ -265,7 +273,8 @@ if uploaded_files and len(uploaded_files) == 2:
             df_main_cmp = df_main_cmp.set_index('__key__')
             df_secondary_cmp = df_secondary_cmp.set_index('__key__')
 
-            diff_report = compare_df(df_main_cmp, df_secondary_cmp).drop_duplicates(subset=["Key"])
+            #diff_report = compare_df(df_main_cmp, df_secondary_cmp).drop_duplicates(subset=["Key"])
+            diff_report = compare_df(df_main_cmp, df_secondary_cmp, case_sensitive=case_sensitive_compare)
 
             # Display report
             st.subheader("📋 Difference Report")
@@ -295,6 +304,7 @@ if uploaded_files and len(uploaded_files) == 2:
                 "selected_columns_secondary": columns_secondary,
                 "column_mapping": column_mapping,
                 "key_columns": key_columns
+                "case_sensitive_compare": case_sensitive_compare
             }
 
             st.download_button(
