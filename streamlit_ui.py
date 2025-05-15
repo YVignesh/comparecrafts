@@ -4,8 +4,6 @@ from io import BytesIO
 import json
 import re
 
-safe_filename = re.sub(r'[^\w\-_. ]', '_', config_filename).strip()
-
 def process_key(df, key_columns, case_sensitive):
     key_parts = df[key_columns].astype(str)
 
@@ -352,11 +350,12 @@ if uploaded_files and len(uploaded_files) == 2:
         }
 
             config_filename = st.text_input("📝 Enter config file name", value="comparison_config.json")
+            safe_filename = re.sub(r'[^\w\-_. ]', '_', config_filename).strip()
             if config_filename.strip():
                 st.download_button(
                     "💾 Download Comparison Config",
                     data=json.dumps(comparison_config, indent=2),
-                    file_name=config_filename if config_filename.endswith(".json") else f"{config_filename}.json",
+                    file_name=safe_filename if safe_filename.endswith(".json") else f"{safe_filename}.json",
                     mime="application/json"
                 )
 else:
