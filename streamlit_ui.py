@@ -3,6 +3,14 @@ import pandas as pd
 from io import BytesIO
 import json
 
+def process_key(df, key_columns, case_sensitive):
+    key_parts = df[key_columns].astype(str)
+
+    if not case_sensitive:
+        key_parts = key_parts.applymap(lambda x: x.lower())
+
+    return key_parts.agg('|'.join, axis=1)
+
 def build_filter_ui(df, label_prefix, saved_filters=None):
     st.markdown(f"### 🔍 {label_prefix} Filter Builder")
 
@@ -267,8 +275,8 @@ if uploaded_files and len(uploaded_files) == 2:
             df_main_cmp = df_main[columns_main].copy()
             df_secondary_cmp = df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy()
 
-            df_main_cmp['__key__'] = df_main_cmp[key_columns].astype(str).agg('|'.join, axis=1)
-            df_secondary_cmp['__key__'] = df_secondary_cmp[key_columns].astype(str).agg('|'.join, axis=1)
+            df_main_cmp['__key__'] = process_key(df_main_cmp, key_columns, case_sensitive_compare)
+            df_secondary_cmp['__key__'] = process_key(df_secondary_cmp, key_columns, case_sensitive_compare)
 
             df_main_cmp = df_main_cmp.set_index('__key__')
             df_secondary_cmp = df_secondary_cmp.set_index('__key__')
