@@ -3,28 +3,6 @@ import pandas as pd
 from io import BytesIO
 import json
 
-st.set_page_config(page_title="Excel Comparator", layout="wide")
-st.title("🔍 Excel Comparator")
-
-# Initialize session state for config
-if "config_data" not in st.session_state:
-    st.session_state.config_data = {}
-
-# --- Load or Save Configuration ---
-st.sidebar.header("🔁 Save / Load Config")
-config_file = st.sidebar.file_uploader("Upload Config JSON", type=["json"])
-load_config = st.sidebar.button("Load Config")
-
-if load_config and config_file:
-    st.session_state.config_data = json.load(config_file)
-    st.sidebar.success("✅ Config loaded!")
-
-config_data = st.session_state.config_data
-config_loaded = bool(config_data)
-
-# --- File Upload ---
-uploaded_files = st.file_uploader("Upload two Excel files", type=["xlsx"], accept_multiple_files=True)
-
 def build_filter_ui(df, label_prefix, saved_filters=None):
     st.markdown(f"### 🔍 {label_prefix} Filter Builder")
 
@@ -94,34 +72,135 @@ def apply_filters(df, filters):
 
     return df
 
+def get_sheet_names(file):
+    try:
+        return pd.ExcelFile(file).sheet_names
+    except Exception as e:
+        st.error(f"❌ Error reading sheet names from {file.name}: {e}")
+        return []
+
+def load_data(file, sheet=None):
+    try:
+        if file.name.endswith(".xlsx"):
+            return pd.read_excel(file, sheet_name=sheet)
+        elif file.name.endswith(".csv"):
+            return pd.read_csv(file)
+        elif file.name.endswith(".txt"):
+            return pd.read_csv(file, delimiter=delimiter)
+    except Exception as e:
+        st.error(f"❌ Failed to load {file.name}: {e}")
+        return None
+
+def compare_df(df1, df2):
+    keys = df1.index.union(df2.index)
+    columns = df1.columns.union(df2.columns)
+    result = []
+
+    for key in keys:
+        if key in df1.index:
+            row1 = df1.loc[key]
+            if isinstance(row1, pd.DataFrame):
+                row1 = row1.iloc[0]
+        else:
+            row1 = pd.Series([None]*len(columns), index=columns)
+
+        if key in df2.index:
+            row2 = df2.loc[key]
+            if isinstance(row2, pd.DataFrame):
+                row2 = row2.iloc[0]
+        else:
+            row2 = pd.Series([None]*len(columns), index=columns)
+
+        diff_row = {"Key": key}
+        changed = False
+
+        for col in columns:
+            val_old = row2[col] if col in row2 else None
+            val_new = row1[col] if col in row1 else None
+
+            diff_row[f"{col}_old"] = val_old
+            diff_row[f"{col}_new"] = val_new
+
+            if pd.isna(val_old) and pd.isna(val_new):
+                continue
+            elif pd.isna(val_old) != pd.isna(val_new) or str(val_old) != str(val_new):
+                changed = True
+
+        if key not in df2.index:
+            diff_row["ChangeType"] = "Added"
+        elif key not in df1.index:
+            diff_row["ChangeType"] = "Removed"
+        elif changed:
+            diff_row["ChangeType"] = "Modified"
+        else:
+            diff_row["ChangeType"] = "Unchanged"
+
+        result.append(diff_row)
+
+    return pd.DataFrame(result)
+
+st.set_page_config(page_title="Compare Crafts", layout="wide")
+st.title("🔍 Compare Crafts")
+
+# Initialize session state for config
+if "config_data" not in st.session_state:
+    st.session_state.config_data = {}
+
+# --- Load or Save Configuration ---
+st.sidebar.header("🔁 Save / Load Config")
+config_file = st.sidebar.file_uploader("Upload Config JSON", type=["json"])
+load_config = st.sidebar.button("Load Config")
+
+if load_config and config_file:
+    st.session_state.config_data = json.load(config_file)
+    st.sidebar.success("✅ Config loaded!")
+
+config_data = st.session_state.config_data
+config_loaded = bool(config_data)
+
+# --- File Upload ---
+uploaded_files = st.file_uploader("Upload two files (Excel/CSV/TXT)", type=["xlsx","csv","txt"], accept_multiple_files=True)
+delimiter = st.sidebar.text_input("Delimiter (for TXT)", value="\t") if any(f.name.endswith(".txt") for f in uploaded_files or []) else None
+
 if uploaded_files and len(uploaded_files) == 2:
     file1, file2 = uploaded_files
-    file_labels = { "Main Excel": file1.name, "Secondary Excel": file2.name }
+    file_labels = { "Main File": file1.name, "Secondary File": file2.name }
 
-    file_main = st.radio("Select the Main Excel", list(file_labels.values()), index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0)
+    file_main = st.radio("Select the Main File", list(file_labels.values()), index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0)
     file_secondary = file2.name if file_main == file1.name else file1.name
 
-    def get_sheet_names(file): return pd.ExcelFile(file).sheet_names
+    # sheets_file1 = get_sheet_names(file1)
+    # sheets_file2 = get_sheet_names(file2)
 
-    sheets_file1 = get_sheet_names(file1)
-    sheets_file2 = get_sheet_names(file2)
+    # st.subheader("🧾 Sheet Selection")
+    # default_main_sheet = config_data.get("main_sheet") if config_loaded else None
+    # default_secondary_sheet = config_data.get("secondary_sheet") if config_loaded else None
 
-    st.subheader("🧾 Sheet Selection")
-    default_main_sheet = config_data.get("main_sheet") if config_loaded else None
-    default_secondary_sheet = config_data.get("secondary_sheet") if config_loaded else None
+    # sheet_main = st.selectbox(f"Select sheet from {file_main}", sheets_file1 if file_main == file1.name else sheets_file2, index=(sheets_file1 if file_main == file1.name else sheets_file2).index(default_main_sheet) if default_main_sheet in (sheets_file1 if file_main == file1.name else sheets_file2) else 0)
+    # sheet_secondary = st.selectbox(f"Select sheet from {file_secondary}", sheets_file2 if file_secondary == file2.name else sheets_file1, index=(sheets_file2 if file_secondary == file2.name else sheets_file1).index(default_secondary_sheet) if default_secondary_sheet in (sheets_file2 if file_secondary == file2.name else sheets_file1) else 0)
 
-    sheet_main = st.selectbox(f"Select sheet from {file_main}", sheets_file1 if file_main == file1.name else sheets_file2, index=(sheets_file1 if file_main == file1.name else sheets_file2).index(default_main_sheet) if default_main_sheet in (sheets_file1 if file_main == file1.name else sheets_file2) else 0)
-    sheet_secondary = st.selectbox(f"Select sheet from {file_secondary}", sheets_file2 if file_secondary == file2.name else sheets_file1, index=(sheets_file2 if file_secondary == file2.name else sheets_file1).index(default_secondary_sheet) if default_secondary_sheet in (sheets_file2 if file_secondary == file2.name else sheets_file1) else 0)
+    ################################################
+    f_main = file1 if file_main == file1.name else file2
+    f_secondary = file2 if file_secondary == file2.name else file1
 
-    def load_sheet(file, sheet): return pd.read_excel(file, sheet_name=sheet)
+    # --- Sheet selection if needed ---
+    sheet_main = sheet_secondary = None
+    if f_main.name.endswith(".xlsx"):
+        sheets = get_sheet_names(f_main)
+        sheet_main = st.selectbox(f"Select sheet from {file_main}", sheets)
+    if f_secondary.name.endswith(".xlsx"):
+        sheets = get_sheet_names(f_secondary)
+        sheet_secondary = st.selectbox(f"Select sheet from {file_secondary}", sheets)
 
-    df_main = load_sheet(file1 if file_main == file1.name else file2, sheet_main)
-    df_secondary = load_sheet(file2 if file_secondary == file2.name else file1, sheet_secondary)
+    ################################################
+
+    df_main = load_data(file1 if file_main == file1.name else file2, sheet_main)
+    df_secondary = load_data(file2 if file_secondary == file2.name else file1, sheet_secondary)
 
     # Filters
     st.subheader("🔍 Filter Conditions")
-    filters_main = build_filter_ui(df_main, "Main Excel", config_data.get("main_filters") if config_loaded else None)
-    filters_secondary = build_filter_ui(df_secondary, "Secondary Excel", config_data.get("secondary_filters") if config_loaded else None)
+    filters_main = build_filter_ui(df_main, "Main File", config_data.get("main_filters") if config_loaded else None)
+    filters_secondary = build_filter_ui(df_secondary, "Secondary File", config_data.get("secondary_filters") if config_loaded else None)
 
     df_main = apply_filters(df_main, filters_main)
     df_secondary = apply_filters(df_secondary, filters_secondary)
@@ -146,7 +225,7 @@ if uploaded_files and len(uploaded_files) == 2:
             column_mapping[col2] = mapped_col
 
         # Key columns
-        st.subheader("🔑 Select Key Columns (from Main Excel columns)")
+        st.subheader("🔑 Select Key Columns (from Main File columns)")
         key_columns = st.multiselect("Select one or more columns to form synthetic key", options=columns_main, default=config_data.get("key_columns") if config_loaded else [])
 
         if key_columns:
@@ -158,54 +237,6 @@ if uploaded_files and len(uploaded_files) == 2:
 
             df_main_cmp = df_main_cmp.set_index('__key__')
             df_secondary_cmp = df_secondary_cmp.set_index('__key__')
-
-            def compare_df(df1, df2):
-                keys = df1.index.union(df2.index)
-                columns = df1.columns.union(df2.columns)
-                result = []
-
-                for key in keys:
-                    if key in df1.index:
-                        row1 = df1.loc[key]
-                        if isinstance(row1, pd.DataFrame):
-                            row1 = row1.iloc[0]
-                    else:
-                        row1 = pd.Series([None]*len(columns), index=columns)
-
-                    if key in df2.index:
-                        row2 = df2.loc[key]
-                        if isinstance(row2, pd.DataFrame):
-                            row2 = row2.iloc[0]
-                    else:
-                        row2 = pd.Series([None]*len(columns), index=columns)
-
-                    diff_row = {"Key": key}
-                    changed = False
-
-                    for col in columns:
-                        val_old = row2[col] if col in row2 else None
-                        val_new = row1[col] if col in row1 else None
-
-                        diff_row[f"{col}_old"] = val_old
-                        diff_row[f"{col}_new"] = val_new
-
-                        if pd.isna(val_old) and pd.isna(val_new):
-                            continue
-                        elif pd.isna(val_old) != pd.isna(val_new) or str(val_old) != str(val_new):
-                            changed = True
-
-                    if key not in df2.index:
-                        diff_row["ChangeType"] = "Added"
-                    elif key not in df1.index:
-                        diff_row["ChangeType"] = "Removed"
-                    elif changed:
-                        diff_row["ChangeType"] = "Modified"
-                    else:
-                        diff_row["ChangeType"] = "Unchanged"
-
-                    result.append(diff_row)
-
-                return pd.DataFrame(result)
 
             diff_report = compare_df(df_main_cmp, df_secondary_cmp).drop_duplicates(subset=["Key"])
 
