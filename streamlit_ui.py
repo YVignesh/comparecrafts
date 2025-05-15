@@ -16,7 +16,8 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
         col = st.selectbox(
             f"Filter {i+1} column ({label_prefix})", 
             options=df.columns.tolist(), 
-            index=df.columns.get_loc(saved[0]) if saved else 0, 
+            #index=df.columns.get_loc(saved[0]) if saved else 0,
+            index=df.columns.get_loc(saved[0]) if saved and saved[0] in df.columns else 0
             key=f"{label_prefix}_col_{i}"
         )
 
@@ -31,6 +32,10 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
 
         case_sensitive = saved[3] if saved and len(saved) > 3 else False
         use_regex = saved[4] if saved and len(saved) > 4 else False
+
+        if op != "contains":
+            case_sensitive = False
+            use_regex = False
 
         if op == "contains":
             case_sensitive = st.checkbox("Case Sensitive?", value=case_sensitive, key=f"{label_prefix}_case_{i}")
@@ -79,7 +84,7 @@ def get_sheet_names(file):
         st.error(f"❌ Error reading sheet names from {file.name}: {e}")
         return []
 
-def load_data(file, sheet=None):
+def load_data(file, sheet=None,delimiter=None):
     try:
         if file.name.endswith(".xlsx"):
             return pd.read_excel(file, sheet_name=sheet)
@@ -158,6 +163,8 @@ if load_config and config_file:
 config_data = st.session_state.config_data
 config_loaded = bool(config_data)
 
+st.sidebar.json(st.session_state.config_data)
+
 # --- File Upload ---
 uploaded_files = st.file_uploader("Upload two files (Excel/CSV/TXT)", type=["xlsx","csv","txt"], accept_multiple_files=True)
 delimiter = st.sidebar.text_input("Delimiter (for TXT)", value="\t") if any(f.name.endswith(".txt") for f in uploaded_files or []) else None
@@ -166,7 +173,12 @@ if uploaded_files and len(uploaded_files) == 2:
     file1, file2 = uploaded_files
     file_labels = { "Main File": file1.name, "Secondary File": file2.name }
 
-    file_main = st.radio("Select the Main File", list(file_labels.values()), index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0)
+    #file_main = st.radio("Select the Main File", list(file_labels.values()), index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0)
+    file_main = st.radio(
+        "Select the Main File",
+        [file1.name, file2.name],
+        index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0
+    )
     file_secondary = file2.name if file_main == file1.name else file1.name
 
     # sheets_file1 = get_sheet_names(file1)
@@ -187,16 +199,29 @@ if uploaded_files and len(uploaded_files) == 2:
     sheet_main = sheet_secondary = None
     if f_main.name.endswith(".xlsx"):
         sheets = get_sheet_names(f_main)
-        sheet_main = st.selectbox(f"Select sheet from {file_main}", sheets)
+        default_main_sheet = config_data.get("main_sheet") if config_loaded else None
+        sheet_main = st.selectbox(
+            f"Select sheet from {file_main}", 
+            sheets, 
+            index=sheets.index(default_main_sheet) if default_main_sheet in sheets else 0
+        )
     if f_secondary.name.endswith(".xlsx"):
         sheets = get_sheet_names(f_secondary)
-        sheet_secondary = st.selectbox(f"Select sheet from {file_secondary}", sheets)
+        #sheet_secondary = st.selectbox(f"Select sheet from {file_secondary}", sheets)
+        default_secondary_sheet = config_data.get("secondary_sheet") if config_loaded else None
+        sheet_secondary = st.selectbox(
+            f"Select sheet from {file_secondary}", 
+            sheets, 
+            index=sheets.index(default_secondary_sheet) if default_secondary_sheet in sheets else 0
+        )
 
     ################################################
 
-    df_main = load_data(file1 if file_main == file1.name else file2, sheet_main)
-    df_secondary = load_data(file2 if file_secondary == file2.name else file1, sheet_secondary)
-
+    #df_main = load_data(file1 if file_main == file1.name else file2, sheet_main)
+    #df_secondary = load_data(file2 if file_secondary == file2.name else file1, sheet_secondary)
+    df_main = load_data(f_main, sheet_main, delimiter)
+    df_secondary = load_data(f_secondary, sheet_secondary, delimiter)
+    
     # Filters
     st.subheader("🔍 Filter Conditions")
     filters_main = build_filter_ui(df_main, "Main File", config_data.get("main_filters") if config_loaded else None)
@@ -259,7 +284,7 @@ if uploaded_files and len(uploaded_files) == 2:
 
             # Save config
             comparison_config = {
-                "main_excel": file_main,
+                "main_excel": f_main.name,
                 "main_sheet": sheet_main,
                 "secondary_sheet": sheet_secondary,
                 "main_filters": filters_main,
