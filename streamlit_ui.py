@@ -303,7 +303,7 @@ if uploaded_files and len(uploaded_files) == 2:
                 "selected_columns_main": columns_main,
                 "selected_columns_secondary": columns_secondary,
                 "column_mapping": column_mapping,
-                "key_columns": key_columns
+                "key_columns": key_columns,
                 "case_sensitive_compare": case_sensitive_compare
             }
 
