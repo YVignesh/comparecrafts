@@ -32,7 +32,7 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
         op = st.selectbox(
             f"Condition for {col}",
             options=["==", "!=", ">", ">=", "<", "<=", "contains", "not contains"],
-            index=(["==", "!=", ">", ">=", "<", "<=", "contains",, "not contains"].index(saved[1]) if saved else 0),
+            index=(["==", "!=", ">", ">=", "<", "<=", "contains", "not contains"].index(saved[1]) if saved else 0),
             key=f"{label_prefix}_op_{i}"
         )
 
