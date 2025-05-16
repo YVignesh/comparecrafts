@@ -230,12 +230,12 @@ if uploaded_files and len(uploaded_files) == 2:
     # )
     # file_secondary = file2.name if file_main == file1.name else file1.name
     col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**Main File**")
-            st.code(file_main)
-        with col2:
-            st.markdown("**Secondary File**")
-            st.code(file_secondary)
+    with col1:
+        st.markdown("**Main File**")
+        st.code(file_main)
+    with col2:
+        st.markdown("**Secondary File**")
+        st.code(file_secondary)
     
     # sheets_file1 = get_sheet_names(file1)
     # sheets_file2 = get_sheet_names(file2)
