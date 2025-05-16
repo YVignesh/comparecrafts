@@ -176,7 +176,7 @@ def compare_df(df1, df2, case_sensitive=True):
 
     return pd.DataFrame(result)
 
-st.set_page_config(page_title="Compare Crafts", layout="wide")
+st.set_page_config(page_title="Kompare Krafts", layout="wide")
 st.title("🔍 Kompare Krafts")
 
 # Initialize session state for config
