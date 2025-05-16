@@ -186,7 +186,6 @@ if "config_data" not in st.session_state:
 # --- Load or Save Configuration ---
 st.sidebar.header("🔁 Save / Load Config")
 st.sidebar.markdown("""
-💾 **Save/Load Config**
 - Use this to avoid redoing your setup for future comparisons.
 - You can upload a config JSON file or generate one after comparing.
 """)
