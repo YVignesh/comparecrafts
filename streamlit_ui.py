@@ -177,7 +177,7 @@ def compare_df(df1, df2, case_sensitive=True):
     return pd.DataFrame(result)
 
 st.set_page_config(page_title="Compare Crafts", layout="wide")
-st.title("🔍 Compare Crafts")
+st.title("🔍 Kompare Krafts")
 
 # Initialize session state for config
 if "config_data" not in st.session_state:
@@ -206,6 +206,7 @@ case_sensitive_compare = config_data.get("case_sensitive_compare", True)
 #st.sidebar.json(st.session_state.config_data)
 
 # --- File Upload ---
+st.header("📤 Upload files")
 uploaded_files = st.file_uploader("Upload two files (Excel/CSV/TXT)", type=["xlsx","csv","txt"], accept_multiple_files=True)
 delimiter = st.sidebar.text_input("Delimiter (for TXT)", value="\t") if any(f.name.endswith(".txt") for f in uploaded_files or []) else None
 
@@ -222,13 +223,20 @@ if uploaded_files and len(uploaded_files) == 2:
         - Rows missing in **Main File** but present in **Secondary File** will be marked as **Removed**.
         - Changes are compared from **Secondary → Main**, so values in the Main File are considered the "latest" values.
         """)
-    file_main = st.radio(
-        "Select the Main File",
-        [file1.name, file2.name],
-        index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0
-    )
-    file_secondary = file2.name if file_main == file1.name else file1.name
-
+    # file_main = st.radio(
+    #     "Select the Main File",
+    #     [file1.name, file2.name],
+    #     index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0
+    # )
+    # file_secondary = file2.name if file_main == file1.name else file1.name
+    col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**Main File**")
+            st.code(file_main)
+        with col2:
+            st.markdown("**Secondary File**")
+            st.code(file_secondary)
+    
     # sheets_file1 = get_sheet_names(file1)
     # sheets_file2 = get_sheet_names(file2)
 
