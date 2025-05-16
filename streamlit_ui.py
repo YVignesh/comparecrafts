@@ -223,19 +223,12 @@ if uploaded_files and len(uploaded_files) == 2:
         - Rows missing in **Main File** but present in **Secondary File** will be marked as **Removed**.
         - Changes are compared from **Secondary → Main**, so values in the Main File are considered the "latest" values.
         """)
-    # file_main = st.radio(
-    #     "Select the Main File",
-    #     [file1.name, file2.name],
-    #     index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0
-    # )
-    # file_secondary = file2.name if file_main == file1.name else file1.name
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Main File**")
-        st.code(file_main)
-    with col2:
-        st.markdown("**Secondary File**")
-        st.code(file_secondary)
+    file_main = st.radio(
+        "Select the Main File",
+        [file1.name, file2.name],
+        index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0
+    )
+    file_secondary = file2.name if file_main == file1.name else file1.name
     
     # sheets_file1 = get_sheet_names(file1)
     # sheets_file2 = get_sheet_names(file2)
