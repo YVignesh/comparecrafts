@@ -206,7 +206,7 @@ case_sensitive_compare = config_data.get("case_sensitive_compare", True)
 #st.sidebar.json(st.session_state.config_data)
 
 # --- File Upload ---
-st.header("📤 Upload files")
+st.subheader("📤 Upload files")
 uploaded_files = st.file_uploader("Upload two files (Excel/CSV/TXT)", type=["xlsx","csv","txt"], accept_multiple_files=True)
 delimiter = st.sidebar.text_input("Delimiter (for TXT)", value="\t") if any(f.name.endswith(".txt") for f in uploaded_files or []) else None
 
@@ -326,11 +326,10 @@ if uploaded_files and len(uploaded_files) == 2:
             
             # Show summary
             with st.expander("📊 Difference Summary", expanded=True):
-                st.markdown(f"**🟢 {k}** — {summary_counts[k]} rows")
                 st.markdown(f"**Total Rows Compared:** {total}")
                 for k in ["Added", "Removed", "Modified", "Unchanged"]:
                     if k in summary_counts:
-                        st.markdown(f"- **{k}:** {summary_counts[k]}")
+                        st.markdown(f"**🟢 {k}** — {summary_counts[k]} rows")
             
             # Display report
             st.subheader("📋 Difference Report")
