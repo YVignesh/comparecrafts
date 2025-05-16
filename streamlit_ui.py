@@ -22,12 +22,11 @@ def apply_find_replace(df, rules):
                 df[col] = df[col].replace(["", "nan", "NaN", "None", np.nan], replace_val)
             else:
                 df[col] = df[col].replace(find_val, replace_val)
-
     return df
 
 def build_replace_ui(label_prefix):
     st.markdown(f"**{label_prefix} File Find & Replace**")
-    replace_rules = []
+    replace_rules = []   
     num_replacements = st.number_input(
         f"Number of replacements for {label_prefix}",
         min_value=0, max_value=10, value=0, step=1,
@@ -35,10 +34,15 @@ def build_replace_ui(label_prefix):
     )
 
     for i in range(num_replacements):
-        find_val = st.text_input(f"Find value #{i+1}", key=f"{label_prefix}_find_{i}")
-        replace_val = st.text_input(f"Replace with", key=f"{label_prefix}_replace_{i}")
+        find_val = st.text_input(
+            f"Find value #{i+1} (use 'null' for blanks)",
+            key=f"{label_prefix}_find_{i}"
+        )
+        replace_val = st.text_input(
+            f"Replace with #{i+1} (use 'null' for blanks)",
+            key=f"{label_prefix}_replace_{i}"
+        )
         replace_rules.append((find_val.strip(), replace_val.strip()))
-
     return replace_rules
     
 def process_key(df, key_columns, case_sensitive):
