@@ -13,7 +13,7 @@ def process_key(df, key_columns, case_sensitive):
     return key_parts.agg('|'.join, axis=1)
 
 def build_filter_ui(df, label_prefix, saved_filters=None):
-    st.markdown(f"# 🔍 {label_prefix} Filter Builder (supports ==, contains, not contains, etc.)")
+    st.markdown(f"##### 🔍 {label_prefix} Filter Builder (supports ==, contains, not contains, etc.)")
 
     filters = []
     num_default = len(saved_filters) if saved_filters else 0
