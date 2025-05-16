@@ -3,7 +3,44 @@ import pandas as pd
 from io import BytesIO
 import json
 import re
+import numpy as np
 
+def apply_find_replace(df, rules):
+    df = df.copy()
+
+    for col in df.columns:
+        df[col] = df[col].astype(str).replace("nan", "")  # normalize stray string "nan"
+        df[col] = df[col].replace("None", "")  # normalize Python-style nulls
+        df[col] = df[col].replace("NaN", "")   # Excel-style
+
+        for find_val, replace_val in rules:
+            # Handle replacement TO null
+            if replace_val.lower() in ["null", "nan", ""]:
+                df[col] = df[col].replace(find_val, np.nan)
+            # Handle replacement FROM null
+            elif find_val.lower() in ["null", "nan", ""]:
+                df[col] = df[col].replace(["", "nan", "NaN", "None", np.nan], replace_val)
+            else:
+                df[col] = df[col].replace(find_val, replace_val)
+
+    return df
+
+def build_replace_ui(label_prefix):
+    st.markdown(f"**{label_prefix} File Find & Replace**")
+    replace_rules = []
+    num_replacements = st.number_input(
+        f"Number of replacements for {label_prefix}",
+        min_value=0, max_value=10, value=0, step=1,
+        key=f"{label_prefix}_replace_count"
+    )
+
+    for i in range(num_replacements):
+        find_val = st.text_input(f"Find value #{i+1}", key=f"{label_prefix}_find_{i}")
+        replace_val = st.text_input(f"Replace with", key=f"{label_prefix}_replace_{i}")
+        replace_rules.append((find_val.strip(), replace_val.strip()))
+
+    return replace_rules
+    
 def process_key(df, key_columns, case_sensitive):
     key_parts = df[key_columns].astype(str)
 
@@ -279,6 +316,10 @@ if uploaded_files and len(uploaded_files) == 2:
     df_main = apply_filters(df_main, filters_main)
     df_secondary = apply_filters(df_secondary, filters_secondary)
 
+    st.subheader("🔁 Value Substitution Rules (Find & Replace)")
+    replace_rules_main = build_replace_ui("Main")
+    replace_rules_secondary = build_replace_ui("Secondary")
+
     # Column selections
     st.subheader("🧩 Select Columns for Comparison")
     default_columns_main = config_data.get("selected_columns_main") if config_loaded else []
@@ -308,6 +349,13 @@ if uploaded_files and len(uploaded_files) == 2:
             df_main_cmp = df_main[columns_main].copy()
             df_secondary_cmp = df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy()
 
+            # Create comparison copies after find & replace
+            df_main_cmp = apply_find_replace(df_main[columns_main].copy(), replace_rules_main)
+            df_secondary_cmp = apply_find_replace(
+                df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy(),
+                replace_rules_secondary
+            )
+            
             df_main_cmp['__key__'] = process_key(df_main_cmp, key_columns, case_sensitive_compare)
             df_secondary_cmp['__key__'] = process_key(df_secondary_cmp, key_columns, case_sensitive_compare)
 
