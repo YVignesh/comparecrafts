@@ -378,7 +378,7 @@ if uploaded_files and len(uploaded_files) == 2:
 
             config_filename = st.text_input("📝 Enter config file name", value="comparison_config.json")
             safe_filename = re.sub(r'[^\w\-_. ]', '_', config_filename).strip()
-            if config_filename.strip():
+            if safe_filename:
                 st.download_button(
                     "💾 Download Comparison Config",
                     data=json.dumps(comparison_config, indent=2),
