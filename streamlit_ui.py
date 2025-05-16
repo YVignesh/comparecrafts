@@ -185,6 +185,11 @@ if "config_data" not in st.session_state:
 
 # --- Load or Save Configuration ---
 st.sidebar.header("🔁 Save / Load Config")
+st.sidebar.markdown("""
+💾 **Save/Load Config**
+- Use this to avoid redoing your setup for future comparisons.
+- You can upload a config JSON file or generate one after comparing.
+""")
 config_file = st.sidebar.file_uploader("Upload Config JSON", type=["json"])
 load_config = st.sidebar.button("Load Config")
 
@@ -210,6 +215,14 @@ if uploaded_files and len(uploaded_files) == 2:
     file_labels = { "Main File": file1.name, "Secondary File": file2.name }
 
     #file_main = st.radio("Select the Main File", list(file_labels.values()), index=[file1.name, file2.name].index(config_data.get("main_excel")) if config_loaded and config_data.get("main_excel") in [file1.name, file2.name] else 0)
+    st.markdown("""
+        ### 📁 Select the **Main File**
+        The **Main File** is treated as the primary source of truth.
+        
+        - Rows present in **Main File** but missing in **Secondary File** will be marked as **Added**.
+        - Rows missing in **Main File** but present in **Secondary File** will be marked as **Removed**.
+        - Changes are compared from **Secondary → Main**, so values in the Main File are considered the "latest" values.
+        """)
     file_main = st.radio(
         "Select the Main File",
         [file1.name, file2.name],
@@ -313,6 +326,7 @@ if uploaded_files and len(uploaded_files) == 2:
             
             # Show summary
             with st.expander("📊 Difference Summary", expanded=True):
+                st.markdown(f"**🟢 {k}** — {summary_counts[k]} rows")
                 st.markdown(f"**Total Rows Compared:** {total}")
                 for k in ["Added", "Removed", "Modified", "Unchanged"]:
                     if k in summary_counts:
@@ -320,6 +334,20 @@ if uploaded_files and len(uploaded_files) == 2:
             
             # Display report
             st.subheader("📋 Difference Report")
+            with st.expander("ℹ️ What does this report mean?", expanded=False):
+                st.markdown("""
+                    ### 📋 **Difference Report Explanation**
+                    
+                    Each row in the report represents a change based on the **synthetic key** you selected.
+                    
+                    - Columns ending with **_old** show values from the **Secondary File** (previous state).
+                    - Columns ending with **_new** show values from the **Main File** (current state).
+                    - **ChangeType** indicates what kind of difference was found:
+                        - `Added` — Row exists only in Main File.
+                        - `Removed` — Row exists only in Secondary File.
+                        - `Modified` — Row exists in both but has one or more differences.
+                        - `Unchanged` — Row exists in both and is identical.
+                    """)
             st.dataframe(diff_report)
 
             def to_excel_bytes(df):
