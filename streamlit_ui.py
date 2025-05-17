@@ -86,7 +86,17 @@ def build_filter_ui(df, label_prefix, saved_filters=None):
         )
 
         if op == "==" or op == "!=":
-            val = st.selectbox(f"Value for {col}", options=sorted(df[col].dropna().astype(str).unique()), index=0 if saved and saved[2] in df[col].astype(str).tolist() else 0, key=f"{label_prefix}_val_{i}")
+            #val = st.selectbox(f"Value for {col}", options=sorted(df[col].dropna().astype(str).unique()), index=0 if saved and saved[2] in df[col].astype(str).tolist() else 0, key=f"{label_prefix}_val_{i}")
+            unique_vals = sorted(df[col].dropna().astype(str).unique())
+            default_index = unique_vals.index(value) if value in unique_vals else 0
+            
+            val = st.selectbox(
+                f"Value for {col}",
+                options=unique_vals,
+                index=default_index,
+                key=f"{label_prefix}_val_{i}"
+            )
+
         else:
             val = st.text_input(f"Value for {col}", value=saved[2] if saved else "", key=f"{label_prefix}_val_{i}")
 
