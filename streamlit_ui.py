@@ -360,8 +360,8 @@ if uploaded_files and len(uploaded_files) == 2:
         case_sensitive_compare = st.checkbox("🔠 Case-sensitive comparison?")
         
         if key_columns:
-            df_main_cmp = df_main[columns_main].copy()
-            df_secondary_cmp = df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy()
+            # df_main_cmp = df_main[columns_main].copy()
+            # df_secondary_cmp = df_secondary[columns_secondary].rename(columns=column_mapping)[columns_main].copy()
 
             # Create comparison copies after find & replace
             df_main_cmp = apply_find_replace(df_main[columns_main].copy(), replace_rules_main)
